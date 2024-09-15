@@ -1,0 +1,7 @@
+{
+    "singleQuote" : false, //this makes singlequote non-exsistent in code
+    "bracketSpacing":  true, //this controls if ater bracket a space should exsist or not
+    "tabWidth": 4 , //this controls how much space tab gives
+    "semi": true, //controls if semiclon exsist or not
+    "trialingComma": "es5" //uses es5 version of this 
+}
