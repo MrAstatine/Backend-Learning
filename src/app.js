@@ -22,5 +22,13 @@ app.use(cookieParser());
 //app.use(cookieParser(process.env.COOKIE_SECRET))      //made by BlackBox  
 
 
+//routes written below were added later on
+import  userRouter from "./routes/user.routes.js";
+//routes declaration
+//app.use("/user",userRouter); //now when user goes to user we give control to userRouter
+//this was basic and can b used
+
+//v should add api and version and all as it is good practice
+app.use("/api/v1/users",userRouter);
 
 export {app};
