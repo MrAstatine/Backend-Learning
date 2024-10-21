@@ -51,9 +51,9 @@ const  userSchema= new Schema({
 })
 
 userSchema.pre("save",async function(next){
-    if(this.isModified("password")){    //this makes sure that when password is changed only then it encryptes and not allt the time something changes
+    if(this.isModified("password")){    //this makes sure that when password is changed only then it encryptes and not all the time something changes
         //we gonna take whatever is being stored; from it take p/w, encrypt it and then store it
-        this.password=bcrypt.hash(this.password,10);    //this.password tells what to encrypt and 10 is no. of rounds
+        this.password=await bcrypt.hash(this.password,10); //this can take some time     //this.password tells what to encrypt and 10 is no. of rounds
         next();
     }
 })
