@@ -33,7 +33,7 @@ const registerUser = asyncHandler(async (req,res) => {
     }
 
     //check if already exsist
-    const exsisted_user=User.findOne({
+    const exsisted_user= await User.findOne({
         $or:[{username},{email}]  //check for both username and email
 
     })
@@ -42,7 +42,14 @@ const registerUser = asyncHandler(async (req,res) => {
     }
     //check for images
     const avatarLocalPath=req.files?.avatar[0]?.path;
-    const coverImageLocalPath=req.files?.coverImage[0]?.path; 
+    //const coverImageLocalPath=req.files?.coverImage[0]?.path; 
+    //if above used then erorr when  no image is sent
+
+    let coverImageLocalPath;
+    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length>0) {
+        coverImageLocalPath=req.files.coverImage[0].path;
+    }
+    
     //check if avatar has been saved. can do similar for  cover image
     if(!avatarLocalPath){
         throw new  ApiError(400,"Avatar file required");
@@ -59,7 +66,7 @@ const registerUser = asyncHandler(async (req,res) => {
         avatar:avatar.url,
         coverImage:coverImage?.url || "",
         email, password,
-        username:username.toLowerCase(); 
+        username:username.toLowerCase() 
     })
     const createdUser=await User.findById(user._id).select("-password -refreshToken");
     if(!createdUser){

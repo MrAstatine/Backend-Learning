@@ -12,22 +12,25 @@ import fs from "fs"; //fs is file system
 //data in config  is for cloudinary account and is a secret information.
 //thus the values r stored in env variables  so that they are not exposed in the code
 
-const uploadOnCloudinary= async (localFilePath=>{
-    //local file path is the path of the file in ur local machine
-    try{
-        if(!localFilePath){
+const uploadOnCloudinary = async (localFilePath) => {
+    // local file path is the path of the file in your local machine
+    try {
+        if (!localFilePath) {
             return null;
         }
-        const response= await cloudinary.uploader.upload(localFilePath,{
-            resource_type: "auto",  //takes all types of files
-        })
-        console.log("File uploaded on cloudinary ",response.url);
+        const response = await cloudinary.uploader.upload(localFilePath, {
+            resource_type: "auto",  // takes all types of files
+        });
+        console.log("File uploaded on Cloudinary:", response.url);
+        fs.unlinkSync(localFilePath);
         return response;
-    }catch(error){
-        fs.unlinkSync(localFilePath)    
-        //removes the locally saved temporary file as upload is done
+    } catch (error) {
+        console.error("Error uploading to Cloudinary:", error);
+        fs.unlinkSync(localFilePath);    
+        // removes the locally saved temporary file as upload is done
+        throw error;  // throw the error so that it can be caught by the caller
     }
-})
+};
 
 
 export {uploadOnCloudinary};

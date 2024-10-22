@@ -1,9 +1,9 @@
-import { type } from "express/lib/response";
+import pkg from "express/lib/response.js";
 import mongoose,{Schema} from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { use } from "bcrypt/promises";
-
+import { use } from "bcrypt/promises.js";
+const {type}=pkg;
 const  userSchema= new Schema({
     username:{
         type:String,
@@ -20,7 +20,7 @@ const  userSchema= new Schema({
         trim: true,
         unique:true,
     },
-    fullname:{
+    fullName:{
         type:String,
         required:true,
         trim: true,
