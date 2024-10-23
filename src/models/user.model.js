@@ -59,7 +59,7 @@ userSchema.pre("save",async function(next){
 })
 //this is like event listener. this pre hook works when something is saved, and then a function is called.
 //nvr write shorthand code of a function in a hook cause u don't have reference to 'this'.
-//this things takes time so make it async 
+//this thing takes time so make it async 
 
 userSchema.methods.isPasswordCorrect=async function(password){   //here v r adding a custom method named isPasswordCorrect
     return await bcrypt.compare(password,this.password);    //returns true or false. does comparison between given password and stored password
@@ -81,9 +81,6 @@ userSchema.methods.generateAccessToken=function(){
 userSchema.methods.generateRefreshToken=function(){
     return jwt.sign({      
         _id: this._id,
-        email:this.email,
-        username: this.username,
-        fullname:this.fullname
     },      //it is same as access token
     process.env.REFRESH_TOKEN_SECRET,
     {

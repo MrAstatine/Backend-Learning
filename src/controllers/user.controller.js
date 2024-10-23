@@ -3,6 +3,23 @@ import {ApiError} from  "../utils/ApiError.js";
 import {User} from  "../models/user.model.js";
 import {uploadOnCloudinary} from  "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { use } from "bcrypt/promises.js";
+
+const generateAccessandRefreshTokens=async(userId)=>{
+    try {
+        const user=await User.findById(userId);
+        const accessToken=user.generateAccessToken();
+        const refreshToken= user.generateRefreshToken();
+        user.refreshToken=refreshToken; //this adds refreshToken  to the user document and thus gets saved in db 
+        await user.save({validateBeforeSave:false}); //updates the  user document in db and puts  the new refreshToken in it
+        //if u use save without the iside stuff then password also gets kicked in. it will validate that password should be present.
+        //by putting  validateBeforeSave:false we are telling mongoose to not validate the document before saving it.
+        return{accessToken,refreshToken}
+    } catch (error) {
+        throw new ApiError(500,"something  went wrong in genrating refresh and access token");
+
+    }
+}
 
 const registerUser = asyncHandler(async (req,res) => {
     /*res.status(200).json({
@@ -79,4 +96,77 @@ const registerUser = asyncHandler(async (req,res) => {
 
 })
 
-export {registerUser};
+const loginUser=asyncHandler(async(req,res)=>{
+    //take data from req.body
+    //check if username or email is available, as login will b based on either but code is similar for both
+    //find the  user. if user not there then tell that user does not exsist
+    //if user found then check password
+    //if password good then access and refresh token generated and sent to user
+    //both tokens sent as cookies and then repsonse sent that user logged in successfully
+
+    //taking data
+    const {email,username,password}=req.body;
+    if(!username || !email){
+        throw new ApiError(400, "username or email is required");
+    }
+
+    //check exsistence
+    const user=await User.findOne({
+        $or:[{username},{email}] //this is a mongodb syntax of finding either username or email in whole data
+    })
+    if(!user){
+        throw new ApiError(404,"user does not exsist");
+    }
+
+    //check  password
+    const isPasswordValid =await user.isPasswordCorrect(password);
+    if(!isPasswordValid){
+        throw new ApiError(401,"password given is wrong");
+    }
+
+    //make access and refresh token
+    const {accessToken,refreshToken}=await generateAccessandRefreshTokens(user._id);
+    const loggedInUser= await User.findById(user._id).select("-password -refreshToken");
+
+    //send as cookies
+    const options={
+        httpOnly:true,
+        secure:true
+    }
+    return res
+    .status(200)
+    .cookie("accessToken",accessToken,options)
+    .cookie("refreshtoken",refreshToken,options)
+    .json(
+        new ApiResponse(200,{
+            user:loggedInUser, accessToken,refreshToken
+            //this allows usr to save his tokens. not good practise but is a thing u can do
+        },"User logged in successfully")
+    )
+})
+
+const  logoutUser=asyncHandler(async(req,res)=>{
+    await User.findByIdAndUpdate(req.user._id,{
+        $set:{ //$set is mogodb thing that changes values
+            refreshToken:undefined,
+        }
+    },{
+        new:true //this gives new updated value in response
+    })//the above part removes token
+    //below part is for cookies. tokens removed from db,and below part removes them from cookies
+
+    const options={
+        httpOnly:true,
+        secure:true
+    }
+    return res.status(200)
+    .clearCookie("accessToken",options)
+    .clearCookie("refreshToken",options)
+    .json(new ApiResponse(200,{},"User logged out"))
+})
+
+export {
+    registerUser,
+    loginUser,
+    logoutUser
+};
