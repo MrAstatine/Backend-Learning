@@ -64,29 +64,29 @@ userSchema.pre("save",async function(next){
 userSchema.methods.isPasswordCorrect=async function(password){   //here v r adding a custom method named isPasswordCorrect
     return await bcrypt.compare(password,this.password);    //returns true or false. does comparison between given password and stored password
 }
-userSchema.methods.generateAccessToken=function(){
-    return jwt.sign({      //sign method of jwt makes token
+
+userSchema.methods.generateAccessToken = function() {
+    return jwt.sign({
         _id: this._id,
-        email:this.email,
+        email: this.email,
         username: this.username,
-        fullname:this.fullname
-        //keys here is the name given in payload and values comes from db
+        fullName: this.fullName
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-        expiresIN: process.env.ACCESS_TOKEN_EXPIRY
-    }
-)
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+    });
 }
-userSchema.methods.generateRefreshToken=function(){
-    return jwt.sign({      
-        _id: this._id,
-    },      //it is same as access token
+
+userSchema.methods.generateRefreshToken = function() {
+    return jwt.sign({
+        _id: this._id
+    },
     process.env.REFRESH_TOKEN_SECRET,
     {
-        expiresIN: process.env.REFRESH_TOKEN_EXPIRY 
-    }
-) 
+        expiresIn: process.env.REFRESH_TOKEN_EXPIRY 
+    });
 }
+
 
 export const User=mongoose.model("User",userSchema);

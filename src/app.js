@@ -16,7 +16,7 @@ app.use(express.json({limit:"16kb"}))
 //app.use(express.urlencoded())     //basic
 app.use(express.urlencoded({extended:true,limit: "16kb"})) 
 //this takes data from URL  and extended is true so it can take nested object s
-
+app.use(express.static("public"));
 //now v configure cookie-parser
 app.use(cookieParser());
 //app.use(cookieParser(process.env.COOKIE_SECRET))      //made by BlackBox  
