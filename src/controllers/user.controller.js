@@ -209,9 +209,94 @@ const refreshAccessToken=asyncHandler(async(req,res)=>{
         throw new ApiError(401,error?.message || "some error in refresh token");
     }
 })
+
+const changeCurrentPassword=asyncHandler(async(req,res)=>{
+    const{oldPassword,newPassword}=req.body;
+    const user=await User.findById(req.user?._id);
+    const isPasswordCorrect=user.isPasswordCorrect(oldPassword);
+    if(!isPasswordCorrect){
+        throw new ApiError(401,"old password is incorrect");
+    }
+    user.password=newPassword;
+    //this gives new password if validation is done. password is automatically hashed and saved when the v save it
+    
+    //by calling the below save we trigger the hook which autmoatically hashes the password
+    await user.save({validateBeforeSave:false});
+    return res
+    .status(200)
+    .json(new ApiResponse(200,{},"Password changed successf"));
+})
+
+const getCurrentUser=asyncHandler(async(req,res)=>{
+    return res.status(200)
+    .json(200,req.user,"current user fetched successfully");
+})
+
+const updateAccountDetail=asyncHandler(async(req,res)=>{
+    const {fullName,email}=req.body;
+    if(!fullName && !email){
+        throw new ApiError(400,"email and username neeeded");
+    }   
+    
+    const user=User.findByIdAndUpdate(req.user?._id,
+        {$set:{
+            fullName,
+            email:email
+        }},
+        {new:true} //this will return the values after updating them. is optional
+    ).select("-password");
+    return res.status(200)
+    .json(new ApiResponse(200,user,"Account details updated successfully"));
+})
+
+const updateUserAvatar=asyncHandler(async(req,res)=>{
+    const avatarLocalPath=req.files?.path;
+    if(!avatarLocalPath){
+        throw new ApiError(400,"avatar file is missing");
+    }
+
+    const avatar=await uploadOnCloudinary(avatarLocalPath);
+    if(!avatar.url){
+        throw new ApiError(400,"Error while uploadingn avatar");
+    }
+
+    const user=await User.findByIdAndUpdate(req.user?._id,
+        {$set:{avatar:avatar.url}},
+        {new:true} //this will return the values after updating them. is optional
+    ).select("-password");
+    return res.status(200)
+    .json(new ApiResponse(200,user,"Avatar is updated"));
+})
+
+const updateUserCoverImage=asyncHandler(async(req,res)=>{
+    const coverLocalPath=req.files?.path;
+    if(!coverImageLocalPath){
+        throw new ApiError(400,"cover image file is missing");
+    }
+
+    const coverImage=await uploadOnCloudinary(coverLocalPath);
+    if(!coverImage.url){
+        throw new ApiError(400,"Error while uploading cover image");
+    }
+
+    const user=await User.findByIdAndUpdate(req.user?._id,
+        {$set:{
+            coverImage:coverImage.url
+        }},
+        {new:true}
+    ).select("-password");
+    return res.status(200)
+    .json(new ApiResponse(200,user,"cover image updated successfully"));
+})
+
 export {
     registerUser,
     loginUser,
     logoutUser,
-    refreshAccessToken
+    refreshAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccountDetail,
+    updateUserAvatar,
+    updateUserCoverImage
 };

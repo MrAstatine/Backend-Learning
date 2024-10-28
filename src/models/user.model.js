@@ -55,6 +55,8 @@ userSchema.pre("save",async function(next){
         //we gonna take whatever is being stored; from it take p/w, encrypt it and then store it
         this.password=await bcrypt.hash(this.password,10); //this can take some time     //this.password tells what to encrypt and 10 is no. of rounds
         next();
+    }else{
+        return next();
     }
 })
 //this is like event listener. this pre hook works when something is saved, and then a function is called.
