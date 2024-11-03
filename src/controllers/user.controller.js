@@ -229,7 +229,10 @@ const changeCurrentPassword=asyncHandler(async(req,res)=>{
 
 const getCurrentUser=asyncHandler(async(req,res)=>{
     return res.status(200)
-    .json(200,req.user,"current user fetched successfully");
+    .json(new ApiResponse(
+        200,
+        user,
+        "User fetched successfully"));
 })
 
 const updateAccountDetail=asyncHandler(async(req,res)=>{
@@ -238,7 +241,7 @@ const updateAccountDetail=asyncHandler(async(req,res)=>{
         throw new ApiError(400,"email and username neeeded");
     }   
     
-    const user=User.findByIdAndUpdate(req.user?._id,
+    const user=await User.findByIdAndUpdate(req.user?._id,
         {$set:{
             fullName,
             email:email
@@ -289,6 +292,70 @@ const updateUserCoverImage=asyncHandler(async(req,res)=>{
     .json(new ApiResponse(200,user,"cover image updated successfully"));
 })
 
+const getUserChannelProfile=asyncHandler(async(req,res)=>{
+    const {username}=req.params; // v r using params so it means v r getting the user from the url
+    //now v got  the user v need to find the user in the database.
+    if(!username?.trim()){
+        throw new ApiError(400,  "username is missing");
+    }
+    const channel=await User.aggregate([
+        {//this is an aggregation pipeline 
+            $match:{ 
+                username:username?.toLowerCase()
+            }
+        },{
+            $lookup:{ //v r finding no. of subscribers by finding how many have the same channel
+                from:"Subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as:"subscribers"
+            }
+        },{
+            $lookup:{//this gives how many channels the user has subscribed to
+                from:"Subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as:"subscribedTo"
+            }
+        },{//this adds a field that  shows the number of subscribers and  the number of channels the user has subscribed to
+            $addFields:{
+                subscribersCount:{
+                    $size:"$subscribers"
+                },
+                channelsSubscribedToCount:{
+                    $size:"$subscribedTo"
+                },
+                isSubscribed:{
+                    $cond:{//this tells if the profile u r viewing is subscribed to or not. Helps frontend guy show 'subscribe' or 'subscribed'
+                        if:{$in: [req.user?._id, "$subscribers.subscriber"]},
+                        then:true,
+                        else:false
+                    }
+                }
+            }
+        },{
+            $project:{
+                //this projects what all values r projected. if value has 1 then passed otherwise not 
+                fullName:1,
+                username:1,
+                subscribersCount:1,
+                channelsSubscribedToCount:1,
+                isSubscribed:1,
+                avatar:1,
+                coverImage:1,
+                email:1 ,
+            }
+        }
+    ])
+    if(!channel?.length){
+        throw new ApiError (404,"Channel does not exsist");
+    }
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,channel[0],"User channel fetched successfully")
+    )
+})
 export {
     registerUser,
     loginUser,
@@ -298,5 +365,6 @@ export {
     getCurrentUser,
     updateAccountDetail,
     updateUserAvatar,
-    updateUserCoverImage
+    updateUserCoverImage,
+    getUserChannelProfile
 };
