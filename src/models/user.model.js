@@ -2,8 +2,8 @@ import pkg from "express/lib/response.js";
 import mongoose,{Schema} from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { use } from "bcrypt/promises.js";
-const {type}=pkg;
+/*import { use } from "bcrypt/promises.js";
+const {type}=pkg;*/ //commented as not used
 const  userSchema= new Schema({
     username:{
         type:String,

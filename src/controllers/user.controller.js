@@ -3,8 +3,9 @@ import {ApiError} from  "../utils/ApiError.js";
 import {User} from  "../models/user.model.js";
 import {uploadOnCloudinary} from  "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { use } from "bcrypt/promises.js";
+//import { use } from "bcrypt/promises.js";     not used
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 
 const generateAccessandRefreshTokens=async(userId)=>{
@@ -218,7 +219,7 @@ const changeCurrentPassword=asyncHandler(async(req,res)=>{
         throw new ApiError(401,"old password is incorrect");
     }
     user.password=newPassword;
-    //this gives new password if validation is done. password is automatically hashed and saved when the v save it
+    //this gives new password if validation is done. password is automatically hashed and saved when v save it
     
     //by calling the below save we trigger the hook which autmoatically hashes the password
     await user.save({validateBeforeSave:false});
@@ -228,6 +229,14 @@ const changeCurrentPassword=asyncHandler(async(req,res)=>{
 })
 
 const getCurrentUser=asyncHandler(async(req,res)=>{
+    const userId=req.user?._id;
+    if(!userId){
+        throw new ApiError(401,"user is not authenticated");
+    }
+    const user=await User.findById(userId).select("-password -refreshToken");
+    if(!user){
+        throw new ApiError(404,"user not found while fetching");
+    }
     return res.status(200)
     .json(new ApiResponse(
         200,
@@ -356,6 +365,59 @@ const getUserChannelProfile=asyncHandler(async(req,res)=>{
         new ApiResponse(200,channel[0],"User channel fetched successfully")
     )
 })
+
+const getWatchHistory=asyncHandler(async(req,res)=>{
+    const user= await User.aggregate([
+        {
+            $match:{
+                _id: new mongoose.Types.ObjectId(req.user._id)
+                //req.user._id gives us  the ID and not ObjectID. v make it back into ObjectID so that v can use it in the query
+            }
+        },{
+            $lookup:{
+                from: "videos",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as:"watchHistory" ,
+                //by adding pipline we can filter the data and also write subpipelines 
+                pipeline:[
+                    { //this pipeline is to find the owner of the video watched
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"owner",
+                            //this will give big array of all data of user. v don't need it. v send only some data as owner
+                            pipeline:[{
+                                $project:{
+                                    fullName:1,
+                                    username:1,
+                                    avatar:1
+                                }
+                            }]
+                        }
+                    },{ //now this is returning array of owner's details. just for easing work of front end v write extra pipeline
+                        $addFields:{
+                            owner:{ // v add field with name owner so exsisting gets overwritten
+                                $first:"$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+    return res.status(200)
+    .json(
+        new ApiResponse(
+            200,user[0].watchHistory,
+            "WAtch history fetched successfully"
+        )
+    )
+})
+
+
+
 export {
     registerUser,
     loginUser,
@@ -366,5 +428,6 @@ export {
     updateAccountDetail,
     updateUserAvatar,
     updateUserCoverImage,
-    getUserChannelProfile
+    getUserChannelProfile,
+    getWatchHistory
 };
