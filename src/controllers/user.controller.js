@@ -151,7 +151,7 @@ const loginUser=asyncHandler(async(req,res)=>{
 const  logoutUser=asyncHandler(async(req,res)=>{
     await User.findByIdAndUpdate(req.user._id,{
         $unset:{ //$ set is mogodb thing that changes values
-            refreshToken:1,
+            refreshToken:1, //this removes the field from the document
         }
     },{
         new:true //this gives new updated value in response

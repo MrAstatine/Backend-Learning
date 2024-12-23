@@ -37,6 +37,6 @@ router.route("/register").post(
     router.route("/update-account").patch(verifyJWT,updateAccountDetail);
     router.route("/avatar").patch(verifyJWT,upload.single("avatar"),updateUserAvatar);
     router.route("/cover-image").patch(verifyJWT,upload.single("coverImage"),updateUserCoverImage);
-    router.route("/c/:username").get(verifyJwT,getUserChannelProfile);
-    router.route("/history").get(verifyJwT,getWatchHistory); 
+    router.route("/c/:username").get(verifyJWT,getUserChannelProfile);
+    router.route("/history").get(verifyJWT,getWatchHistory); 
 export default router;
