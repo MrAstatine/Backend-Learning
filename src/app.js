@@ -24,11 +24,27 @@ app.use(cookieParser());
 
 //routes written below were added later on
 import  userRouter from "./routes/user.routes.js";
+import  healthcheckRouter from "./routes/health.routes.js";
+import  tweetRouter from "./routes/tweet.routes.js";
+import  dashboardRouter from "./routes/dashboard.routes.js";
+import  likeRouter from "./routes/like.routes.js";
+import  commentRouter from "./routes/comment.routes.js";
+import  playlistRouter from "./routes/playlist.routes.js";
+import  videoRouter from "./routes/video.routes.js";
+import  subscriptionRouter from "./routes/subscription.routes.js";
 //routes declaration
 //app.use("/user",userRouter); //now when user goes to user we give control to userRouter
 //this was basic and can b used
 
 //v should add api and version and all as it is good practice
 app.use("/api/v1/users",userRouter);
+app.use("/api/v1/healthcheck",healthcheckRouter);
+app.use("/api/v1/tweet",tweetRouter);
+app.use("/api/v1/subscription",subscriptionRouter);
+app.use("/api/v1/video",videoRouter);
+app.use("/api/v1/playlist",playlistRouter);
+app.use("/api/v1/comment",commentRouter);
+app.use("/api/v1/like",likeRouter);
+app.use("/api/v1/dashboard",dashboardRouter);
 
 export {app};
