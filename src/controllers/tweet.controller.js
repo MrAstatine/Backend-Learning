@@ -3,7 +3,7 @@ import {ApiResponse} from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose,{isValidObjectId} from "mongoose";
 import {Tweet} from "../models/tweet.model.js";
-import {User} from "../models/user.model.js";
+//import {User} from "../models/user.model.js";
 import cookieParser from "cookie-parser";
 
 const createTweet=asyncHandler(async(req,res)=>{

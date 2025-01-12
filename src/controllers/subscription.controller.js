@@ -3,7 +3,7 @@ import {ApiError} from "../utils/ApiError.js";
 import {asyncHandler} from "../utils/asyncHandler.js";
 import {Subscription} from "../models/subscription.model.js";
 import {User} from "../models/user.model.js";
-import mongoose, isValidObjectId from "mongoose";
+import mongoose, {isValidObjectId} from "mongoose";
 
 const toggleSubscription= asyncHandler(async(req,res)=>{
     const {channelId}= req.params;
@@ -11,7 +11,7 @@ const toggleSubscription= asyncHandler(async(req,res)=>{
         throw new ApiError(400,"Invalid Channel Id");
     }
     const subscribed= await Subscription.findOne({
-        $and:[{channel:channelId},{subscriber=req.user._id}]
+        $and:[{channel:channelId},{subscriber:req.user._id}]
     })
     if(!subscribed){
         const subscribe= await Subscription.create({
@@ -32,7 +32,7 @@ const toggleSubscription= asyncHandler(async(req,res)=>{
     .json(200, unsubscribe, "User has unsubscribed from the channel")
 })
 
-getUserChannelSubscribers= asyncHandler(async(req,res)=>{
+const getUserChannelSubscribers= asyncHandler(async(req,res)=>{
     const subscriberId=req.params;
     if(!isValidObjectId(channelId)){
         throw new ApiError(400,"Invalid Channel Id");
